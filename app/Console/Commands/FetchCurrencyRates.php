@@ -58,7 +58,7 @@ class FetchCurrencyRates extends Command
         });
     }
 
-    private function currencyQueryString($allOtherCurrencies, $currency)
+    private function currencyQueryString($allOtherCurrencies, $currency): string
     {
         $currencyPairs = $allOtherCurrencies->reduce(function ($carry, $cur) use ($currency) {
             return array_merge($carry, [$currency->code . '_' . $cur->code]);
