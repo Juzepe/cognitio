@@ -19,9 +19,12 @@ class StoreTransactionRequest extends FormRequest
     {
         $this->walletFrom = Wallet::find($request->wallet_from);
         $this->walletTo = Wallet::find($request->wallet_to);
-        $this->latestRate = LatestCurrencyRate::where('currency_from', $this->walletFrom->currency_id)
-            ->where('currency_to', $this->walletTo->currency_id)
-            ->first();
+
+        if ($this->walletFrom && $this->walletTo) {
+            $this->latestRate = LatestCurrencyRate::where('currency_from', $this->walletFrom->currency_id)
+                ->where('currency_to', $this->walletTo->currency_id)
+                ->first();
+        }
 
         parent::__construct();
     }
@@ -33,7 +36,7 @@ class StoreTransactionRequest extends FormRequest
      */
     public function authorize()
     {
-        return $this->walletFrom->user_id == Auth::id();
+        return !$this->walletFrom || $this->walletFrom->user_id == Auth::id();
     }
 
     /**
@@ -53,11 +56,16 @@ class StoreTransactionRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            if ($this->walletFrom->amount < request()->amount) {
+            if (isset($this->walletFrom) && $this->walletFrom->amount < request()->amount) {
                 $validator->errors()->add('amount', 'You have not sufficient money for this transaction.');
             }
 
-            if (!$this->latestRate && $this->walletFrom->currency_id != $this->walletTo->currency_id) {
+            if (
+                !$this->latestRate
+                && isset($this->walletFrom)
+                && isset($this->walletTo)
+                &&  $this->walletFrom->currency_id != $this->walletTo->currency_id
+            ) {
                 $validator->errors()->add('wallet_from', 'Making transaction is temporary unavailable.');
             }
         });

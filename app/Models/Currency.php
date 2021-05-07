@@ -15,4 +15,9 @@ class Currency extends Model
         'code',
         'name',
     ];
+
+    public static function idByCode(string $code)
+    {
+        return self::where("code", $code)->first()->id;
+    }
 }

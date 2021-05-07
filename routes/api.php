@@ -28,4 +28,5 @@ Route::group(['middleware' => 'auth:sanctum'], function () {
     Route::post('/wallets/{id}/active', [WalletController::class, 'active']);
 
     Route::post('/transactions', [TransactionController::class, 'store']);
+    Route::post('/transactions/{transaction}/confirm', [TransactionController::class, 'confirm']);
 });
