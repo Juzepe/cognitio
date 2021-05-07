@@ -228,6 +228,10 @@ return [
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
 
+        // local aliases
+
+        'Transactions' => \App\Services\Transactions\TransactionsFacade::class,
+
     ],
 
 ];

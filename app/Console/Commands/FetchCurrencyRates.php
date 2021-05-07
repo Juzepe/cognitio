@@ -47,7 +47,7 @@ class FetchCurrencyRates extends Command
                 if (isset($rates[$currency->code . '_' . $cur->code])) {
                     $this->saveCurrencies($currency, $cur, $rates);
                 }
-            }) ;
+            });
         });
     }
 
@@ -60,11 +60,9 @@ class FetchCurrencyRates extends Command
 
     private function currencyQueryString($allOtherCurrencies, $currency): string
     {
-        $currencyPairs = $allOtherCurrencies->reduce(function ($carry, $cur) use ($currency) {
-            return array_merge($carry, [$currency->code . '_' . $cur->code]);
-        }, []);
-
-        return implode(',', $currencyPairs);
+        return $allOtherCurrencies->map(function ($cur) use ($currency) {
+            return $currency->code . '_' . $cur->code;
+        })->implode(',');
     }
 
     private function rates($query)
