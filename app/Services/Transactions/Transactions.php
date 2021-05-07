@@ -24,14 +24,10 @@ class Transactions
                 ]);
             $transactionId = $transaction->id;
 
-            $request->walletFrom->update([
-                'amount' => $request->walletFrom->amount - $request->amount,
-            ]);
+            $this->cut($transaction);
 
             if ($transactionStatusCode == 'confirmed') {
-                $request->walletTo->update([
-                    'amount' => $request->walletTo->amount + $request->amount * $rate - $fee,
-                ]);
+                $this->transfer($transaction);
             }
         });
 
@@ -41,21 +37,36 @@ class Transactions
     public function confirm($request, $transaction)
     {
         DB::transaction(function () use ($request, $transaction) {
-            $transactionStatusCode = $request->confirm ? 'confirmed' : 'reject';
-
             $transaction->update([
-                'transaction_status_id' => TransactionStatus::idByCode($transactionStatusCode),
+                'transaction_status_id' => TransactionStatus::idByCode($request->confirm ? 'confirmed' : 'reject'),
             ]);
 
             if ($request->confirm) {
-                $transaction->walletTo->update([
-                    'amount' => $transaction->walletTo->amount + ($transaction->amount - $transaction->fee) * $transaction->rate,
-                ]);
+                $this->transfer($transaction);
             } else {
-                $transaction->walletFrom->update([
-                    'amount' => $transaction->walletFrom->amount + $transaction->amount,
-                ]);
+                $this->refund($transaction);
             }
         });
+    }
+
+    private function cut($transaction)
+    {
+        $transaction->walletFrom->update([
+            'amount' => $transaction->walletFrom->amount - $transaction->amount,
+        ]);
+    }
+
+    private function transfer($transaction)
+    {
+        $transaction->walletTo->update([
+            'amount' => $transaction->walletTo->amount + ($transaction->amount - $transaction->fee) * $transaction->rate,
+        ]);
+    }
+
+    private function refund($transaction)
+    {
+        $transaction->walletFrom->update([
+            'amount' => $transaction->walletFrom->amount + $transaction->amount,
+        ]);
     }
 }

@@ -10,14 +10,6 @@ use Illuminate\Support\Facades\Auth;
 
 class ConfirmTransactionRequest extends FormRequest
 {
-    public $transaction;
-
-    public function __construct(Request $request)
-    {
-        $this->transaction = $request->transaction;
-
-        parent::__construct();
-    }
     /**
      * Determine if the user is authorized to make this request.
      *
