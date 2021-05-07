@@ -13,16 +13,16 @@ use Illuminate\Support\Facades\Auth;
 
 class WalletController extends Controller
 {
+    private $walletFields = [
+        'currency_id',
+        'name',
+        'amount',
+        'is_active',
+    ];
+
     public function index()
     {
-        $wallets = Auth::user()
-            ->wallets()
-            ->get([
-                'currency_id',
-                'name',
-                'amount',
-                'is_active',
-            ]);
+        $wallets = Auth::user()->wallets()->get($this->walletFields);
 
         return [
             'status' => 'OK',
@@ -51,7 +51,7 @@ class WalletController extends Controller
     {
         return [
             'status' => 'OK',
-            'wallet' => $this->wallet($id),
+            'wallet' => Wallet::find($id, $this->walletFields),
         ];
     }
 
@@ -59,14 +59,14 @@ class WalletController extends Controller
     {
         return [
             'status' => 'OK',
-            'wallet' => $this->wallet($id),
+            'wallet' => Wallet::find($id, $this->walletFields),
             'currencies' => Currency::all(['id', 'code', 'name']),
         ];
     }
 
     public function update(UpdateWalletRequest $request, $id)
     {
-        $this->wallet($id)->update($request->validated());
+        Wallet::find($id)->update($request->validated());
 
         return [
             'status' => 'OK',
@@ -75,7 +75,7 @@ class WalletController extends Controller
 
     public function destroy($id, WalletAuthorizationRequest $request)
     {
-        $this->wallet($id)->update(['is_active' => false]);
+        Wallet::find($id)->update(['is_active' => false]);
 
         return [
             'status' => 'OK',
@@ -84,21 +84,10 @@ class WalletController extends Controller
 
     public function active($id, WalletAuthorizationRequest $request)
     {
-        $this->wallet($id)->update(['is_active' => true]);
+        Wallet::find($id)->update(['is_active' => true]);
 
         return [
             'status' => 'OK',
         ];
-    }
-
-    private function wallet($id)
-    {
-        return Wallet::find($id, [
-            'id',
-            'currency_id',
-            'name',
-            'amount',
-            'is_active',
-        ]);
     }
 }
