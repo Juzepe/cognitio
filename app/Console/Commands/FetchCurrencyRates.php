@@ -39,11 +39,11 @@ class FetchCurrencyRates extends Command
         $currencies = Currency::all();
 
         $currencies->each(function ($currency) use ($currencies) {
-            $pairs = $this->pairs($currencies, $currency);
+            $allOtherCurrencies = $this->allOtherCurrencies($currencies, $currency);
 
-            $rates = $this->rates($this->query($pairs, $currency));
+            $rates = $this->rates($this->currencyQueryString($allOtherCurrencies, $currency));
 
-            $pairs->each(function ($cur) use ($currency, $rates) {
+            $allOtherCurrencies->each(function ($cur) use ($currency, $rates) {
                 if (isset($rates[$currency->code . '_' . $cur->code])) {
                     $this->saveCurrencies($currency, $cur, $rates);
                 }
@@ -51,18 +51,20 @@ class FetchCurrencyRates extends Command
         });
     }
 
-    private function pairs($currencies, $currency)
+    private function allOtherCurrencies($currencies, $currency)
     {
-        return $currencies->filter(function ($cur, $key) use ($currency) {
+        return $currencies->filter(function ($cur) use ($currency) {
             return $cur->code != $currency->code;
         });
     }
 
-    private function query($pairs, $currency)
+    private function currencyQueryString($allOtherCurrencies, $currency)
     {
-        return $pairs->reduce(function ($carry, $cur) use ($currency) {
-            return ($carry ? "$carry," : $carry) . $currency->code . '_' . $cur->code;
-        }, '');
+        $currencyPairs = $allOtherCurrencies->reduce(function ($carry, $cur) use ($currency) {
+            return array_merge($carry, [$currency->code . '_' . $cur->code]);
+        }, []);
+
+        return implode(',', $currencyPairs);
     }
 
     private function rates($query)
