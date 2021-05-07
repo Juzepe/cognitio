@@ -3,12 +3,11 @@
 namespace App\Http\Requests\Wallets;
 
 use App\Models\Wallet;
-use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class UpdateWalletRequest extends FormRequest
+class WalletAuthorizationRequest extends FormRequest
 {
     public $wallet;
 
@@ -37,17 +36,12 @@ class UpdateWalletRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required',
+            //
         ];
     }
 
     protected function failedAuthorization()
     {
         response('This action is unauthorized.', '401')->throwResponse();
-    }
-
-    protected function failedValidation(Validator $validator)
-    {
-        response()->json($validator->errors(), '400')->throwResponse();
     }
 }

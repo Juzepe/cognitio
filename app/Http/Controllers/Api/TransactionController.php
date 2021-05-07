@@ -21,11 +21,8 @@ class TransactionController extends Controller
             $rate = $request->latestRate->rate ?? 1;
             $transactionStatusCode = $request->walletFrom->user_id == $request->walletTo->user_id ? 'confirmed' : 'pending';
 
-            $transaction = Transaction::create([
-                'wallet_from' => $request->wallet_from,
-                'wallet_to' => $request->wallet_to,
+            $transaction = Transaction::create($request->validated() + [
                 'transaction_status_id' => TransactionStatus::idByCode($transactionStatusCode),
-                'amount' => $request->amount,
                 'fee' => $fee,
                 'rate' => $rate,
             ]);

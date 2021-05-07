@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Wallets\StoreWalletRequest;
 use App\Http\Requests\Wallets\UpdateWalletRequest;
+use App\Http\Requests\Wallets\WalletAuthorizationRequest;
 use App\Models\Currency;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
@@ -14,8 +15,8 @@ class WalletController extends Controller
 {
     public function index()
     {
-        $wallets = Wallet::where('user_id', Auth::id())
-            ->with('currency:id,code,name')
+        $wallets = Auth::user()
+            ->wallets()
             ->get([
                 'currency_id',
                 'name',
@@ -46,7 +47,7 @@ class WalletController extends Controller
         ];
     }
 
-    public function show($id)
+    public function show($id, WalletAuthorizationRequest $request)
     {
         return [
             'status' => 'OK',
@@ -54,7 +55,7 @@ class WalletController extends Controller
         ];
     }
 
-    public function edit($id)
+    public function edit($id, WalletAuthorizationRequest $request)
     {
         return [
             'status' => 'OK',
@@ -72,7 +73,7 @@ class WalletController extends Controller
         ];
     }
 
-    public function destroy($id)
+    public function destroy($id, WalletAuthorizationRequest $request)
     {
         $this->wallet($id)->update(['is_active' => false]);
 
@@ -81,7 +82,7 @@ class WalletController extends Controller
         ];
     }
 
-    public function active($id)
+    public function active($id, WalletAuthorizationRequest $request)
     {
         $this->wallet($id)->update(['is_active' => true]);
 
@@ -92,14 +93,12 @@ class WalletController extends Controller
 
     private function wallet($id)
     {
-        return Wallet::where('user_id', Auth::id())
-            ->where('id', $id)
-            ->first([
-                'id',
-                'currency_id',
-                'name',
-                'amount',
-                'is_active',
-            ]);
+        return Wallet::find($id, [
+            'id',
+            'currency_id',
+            'name',
+            'amount',
+            'is_active',
+        ]);
     }
 }
