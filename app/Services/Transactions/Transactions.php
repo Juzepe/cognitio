@@ -10,19 +10,16 @@ class Transactions
 {
     public function create($request)
     {
-        $transactionId = null;
+        $transaction = null;
 
-        DB::transaction(function () use ($request, &$transactionId) {
-            $fee = $request->walletFrom->user_id != $request->walletTo->user_id ? $request->amount * 0.01 : 0;
-            $rate = $request->latestRate->rate ?? 1;
-            $transactionStatusCode = $request->walletFrom->user_id == $request->walletTo->user_id ? 'confirmed' : 'pending';
+        DB::transaction(function () use ($request, &$transaction) {
+            $transactionStatusCode = $this->walletsHasSameUser($request) ? 'confirmed' : 'pending';
 
             $transaction = Transaction::create($request->validated() + [
                     'transaction_status_id' => TransactionStatus::idByCode($transactionStatusCode),
-                    'fee' => $fee,
-                    'rate' => $rate,
+                    'fee' => $this->walletsHasSameUser($request) ? 0 : $request->amount * 0.01,
+                    'rate' => $request->latestRate->rate ?? 1,
                 ]);
-            $transactionId = $transaction->id;
 
             $this->cut($transaction);
 
@@ -31,7 +28,7 @@ class Transactions
             }
         });
 
-        return $transactionId;
+        return $transaction->id ?? null;
     }
 
     public function confirm($request, $transaction)
@@ -47,6 +44,11 @@ class Transactions
                 $this->refund($transaction);
             }
         });
+    }
+
+    private function walletsHasSameUser($request): bool
+    {
+        return $request->walletFrom->user_id == $request->walletTo->user_id;
     }
 
     private function cut($transaction)
